@@ -2,11 +2,30 @@
 
 **A beginner-friendly project to deploy a highly available web application using AWS EC2, Application Load Balancer (ALB), Launch Template, and Auto Scaling Group.**
 
+**Repository:** [https://github.com/atulyw/edublitz-Highly-Available-Web-Application-using-Auto-Scaling-and-Load-Balancer](https://github.com/atulyw/edublitz-Highly-Available-Web-Application-using-Auto-Scaling-and-Load-Balancer)
+
 ---
 
 ## Project Goal
 
 Deploy a web application that demonstrates **High Availability** and **Auto Scaling**. When students click the "Increase Load" button, it generates CPU load on the EC2 instance, triggering Auto Scaling to automatically launch new instances.
+
+---
+
+## Quick Start (Full Flow)
+
+| Step | Section | Action |
+|------|---------|--------|
+| 1 | [Clone Repository](#section-0-clone-the-repository) | Clone the project to your local machine |
+| 2 | [Security Groups](#section-1-create-security-groups) | Create Load Balancer and EC2 security groups |
+| 3 | [Test Instance](#section-2-launch-ec2-instance-for-testing) | Launch a single EC2 instance to verify the app |
+| 4 | [IAM Role](#section-25-create-iam-role-required-for-all-instances-listing) | Create IAM role for "All Instances" listing (optional) |
+| 5 | [Launch Template](#section-3-create-launch-template) | Create Launch Template with User Data |
+| 6 | [Target Group](#section-4-create-target-group) | Create Target Group for the Load Balancer |
+| 7 | [Load Balancer](#section-5-create-application-load-balancer) | Create Application Load Balancer |
+| 8 | [Auto Scaling Group](#section-6-create-auto-scaling-group) | Create Auto Scaling Group |
+| 9 | [Scaling Policy](#section-7-configure-scaling-policy) | Configure CPU-based scaling policy |
+| 10 | [Test](#section-8-test-auto-scaling) | Click "Increase Load" and verify Auto Scaling |
 
 ---
 
@@ -47,7 +66,7 @@ Deploy a web application that demonstrates **High Availability** and **Auto Scal
 ## Project Structure
 
 ```
-edublitz-ha-web-application/
+edublitz-Highly-Available-Web-Application-using-Auto-Scaling-and-Load-Balancer/
 │
 ├── app/
 │   ├── index.html        # Main webpage with metadata, all instances list, and button
@@ -65,9 +84,29 @@ edublitz-ha-web-application/
 
 ## Prerequisites
 
-- AWS Account
+- **Git** installed on your local machine
+- **AWS Account**
 - Basic understanding of EC2 and AWS Console
 - Region: Choose one (e.g., us-east-1)
+
+---
+
+# SECTION 0: Clone the Repository
+
+Clone the project to your local machine. You will use the `app/` folder contents for deployment.
+
+```bash
+git clone https://github.com/atulyw/edublitz-Highly-Available-Web-Application-using-Auto-Scaling-and-Load-Balancer.git
+cd edublitz-Highly-Available-Web-Application-using-Auto-Scaling-and-Load-Balancer
+```
+
+**Verify the structure:**
+```bash
+ls -la app/
+# You should see: index.html, load.sh, load.php, load-internal.php, metadata.php, instances.php, install.sh
+```
+
+Keep this terminal open. You will reference the `app/` folder in the following sections.
 
 ---
 
@@ -118,16 +157,29 @@ edublitz-ha-web-application/
 5. **Key pair:** Create new or select existing (needed for SSH)
 6. **Network settings:**
    - Security group: Select `edublitz-ec2-sg`
-7. **Advanced details** → **User data** (paste the contents of `install.sh` or use the script below)
+7. **Advanced details** → **User data** — choose ONE of the options below:
 
-**Option A - Copy install.sh to User Data:**
-- Copy the entire contents of `app/install.sh` and paste into User Data
+**Option A - Clone and run (recommended):**
 
-**Option B - Run manually after launch:**
+Paste this into User data. It clones the repo and runs `install.sh` automatically:
+
+```bash
+#!/bin/bash
+yum install -y git
+git clone https://github.com/atulyw/edublitz-Highly-Available-Web-Application-using-Auto-Scaling-and-Load-Balancer.git /tmp/edublitz
+cd /tmp/edublitz/app && chmod +x install.sh && sudo bash install.sh
+```
+
+**Option B - Copy install.sh to User Data (no Git):**
+
+- Open `app/install.sh` from your cloned repo
+- Copy the **entire contents** and paste into User Data
+
+**Option C - Run manually after launch:**
+
 - SSH into the instance
-- Create app directory: `mkdir -p ~/app`
-- Copy `index.html`, `load.sh`, `load.php`, `metadata.php`, and `install.sh` to `~/app`
-- Run: `cd ~/app && chmod +x install.sh && sudo bash install.sh`
+- Run: `git clone https://github.com/atulyw/edublitz-Highly-Available-Web-Application-using-Auto-Scaling-and-Load-Balancer.git /tmp/edublitz`
+- Run: `cd /tmp/edublitz/app && chmod +x install.sh && sudo bash install.sh`
 
 8. Click **Launch instance**
 9. Wait 2–3 minutes for installation to complete
@@ -187,9 +239,19 @@ edublitz-ha-web-application/
 8. **Network settings:**
    - Create security group or select existing
    - Select `edublitz-ec2-sg`
-9. **Advanced details** → **User data:**
-   - Paste the **entire contents** of `app/install.sh`
-   - Or use a script that downloads and runs it (e.g., from S3)
+9. **Advanced details** → **User data** — choose ONE:
+
+   **Option A - Clone and run (recommended):**
+   ```bash
+   #!/bin/bash
+   yum install -y git
+   git clone https://github.com/atulyw/edublitz-Highly-Available-Web-Application-using-Auto-Scaling-and-Load-Balancer.git /tmp/edublitz
+   cd /tmp/edublitz/app && chmod +x install.sh && sudo bash install.sh
+   ```
+
+   **Option B - Paste install.sh:**
+   - Copy the **entire contents** of `app/install.sh` from your cloned repo and paste into User Data
+
 10. Click **Create launch template**
 
 ---
@@ -343,7 +405,10 @@ After completing this project, students will understand:
 5. **EC2 Instances**
    - Terminate any remaining instances (if not already terminated by ASG)
 
-6. **Security Groups**
+6. **IAM Role** (if created)
+   - IAM → Roles → Delete `edublitz-ec2-role` (after Launch Template is deleted)
+
+7. **Security Groups**
    - Delete `edublitz-alb-sg` and `edublitz-ec2-sg` (after instances and ALB are gone)
 
 ---
@@ -357,6 +422,13 @@ After completing this project, students will understand:
 | Increase Load does nothing | Check load.sh is executable; verify stress is installed |
 | Auto Scaling doesn't launch | Wait 3–5 min; CPU must stay above 50% for a few minutes |
 | Health check failing | Ensure nginx serves `/` correctly; check Target Group health |
+
+---
+
+## Repository
+
+- **GitHub:** [https://github.com/atulyw/edublitz-Highly-Available-Web-Application-using-Auto-Scaling-and-Load-Balancer](https://github.com/atulyw/edublitz-Highly-Available-Web-Application-using-Auto-Scaling-and-Load-Balancer)
+- **Clone:** `git clone https://github.com/atulyw/edublitz-Highly-Available-Web-Application-using-Auto-Scaling-and-Load-Balancer.git`
 
 ---
 
