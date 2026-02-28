@@ -108,6 +108,7 @@ ls -la app/
 
 Keep this terminal open. You will reference the `app/` folder in the following sections.
 
+![](images/image2026-02-28-12-35-36.png)
 ---
 
 # SECTION 1: Create Security Groups
@@ -124,7 +125,7 @@ Keep this terminal open. You will reference the `app/` folder in the following s
    | HTTP | 80   | 0.0.0.0/0 (Anywhere) |
 
 6. Click **Create security group**
-
+![](images/image2026-02-28-12-37-57.png)
 ---
 
 ## 1.2 EC2 Security Group
@@ -141,6 +142,8 @@ Keep this terminal open. You will reference the `app/` folder in the following s
    | HTTP | 80   | Same SG (edublitz-ec2-sg) — for instances to call each other's /load-internal |
 
    **Tip:** If you use 0.0.0.0/0 for HTTP, instances can already reach each other. Adding "Same SG" as source is more secure.
+
+![](images/image2026-02-28-12-46-01.png)
 
 6. Click **Create security group**
 
@@ -189,6 +192,9 @@ cd /tmp/edublitz/app && chmod +x install.sh && sudo bash install.sh
 
 **Once verified, you can terminate this test instance and proceed to Section 3.**
 
+![](images/image2026-02-28-13-13-57.png)
+
+
 ---
 
 # SECTION 2.5: Create IAM Role (Required for "All Instances" Listing)
@@ -204,6 +210,8 @@ cd /tmp/edublitz/app && chmod +x install.sh && sudo bash install.sh
 
 **Custom policy (minimal permissions):** Create inline policy with:
 
+![](images/image2026-02-28-13-18-38.png)
+
 ```json
 {
   "Version": "2012-10-17",
@@ -218,6 +226,25 @@ cd /tmp/edublitz/app && chmod +x install.sh && sudo bash install.sh
       "Resource": "*"
     }
   ]
+}
+```
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sts:AssumeRole"
+            ],
+            "Principal": {
+                "Service": [
+                    "ec2.amazonaws.com"
+                ]
+            }
+        }
+    ]
 }
 ```
 
@@ -254,6 +281,9 @@ cd /tmp/edublitz/app && chmod +x install.sh && sudo bash install.sh
 
 10. Click **Create launch template**
 
+![](images/image2026-02-28-13-24-24.png)
+
+
 ---
 
 # SECTION 4: Create Target Group
@@ -270,6 +300,7 @@ cd /tmp/edublitz/app && chmod +x install.sh && sudo bash install.sh
    - Advanced: Default values are fine
 8. Click **Next** → **Create target group**
 
+![](images/image2026-02-28-13-28-10.png)
 ---
 
 # SECTION 5: Create Application Load Balancer
@@ -287,6 +318,9 @@ cd /tmp/edublitz/app && chmod +x install.sh && sudo bash install.sh
    - Default action: Forward to `edublitz-tg`
 8. Click **Create load balancer**
 9. Note the **DNS name** of the ALB (e.g., `edublitz-alb-123456789.us-east-1.elb.amazonaws.com`)
+
+![](images/image2026-02-28-13-31-07.png)
+![](images/image2026-02-28-13-31-34.png)
 
 ---
 
@@ -309,6 +343,9 @@ cd /tmp/edublitz/app && chmod +x install.sh && sudo bash install.sh
    - Maximum capacity: **3**
 7. Click **Next** through optional settings → **Create Auto Scaling group**
 8. Wait 2–3 minutes for the first instance to launch and pass health checks
+![](images/image2026-02-28-13-34-18.png)
+![](images/image2026-02-28-13-36-02.png)
+![](images/image2026-02-28-13-38-23.png)
 
 ---
 
@@ -348,6 +385,17 @@ cd /tmp/edublitz/app && chmod +x install.sh && sudo bash install.sh
 2. **Refresh the page** multiple times
 3. **Instance ID** and **Availability Zone** may **change** on each refresh
 4. This proves the ALB is distributing traffic across multiple instances
+5. cmd to increase load to 100% 
+   ```bash
+   stress-ng --cpu 0 --cpu-load 100
+   ```
+
+![](images/image2026-02-28-13-55-08.png)
+![](images/image2026-02-28-14-18-53.png)
+![](images/image2026-02-28-14-20-19.png)
+![](images/image2026-02-28-14-20-56.png)
+
+
 
 ---
 
